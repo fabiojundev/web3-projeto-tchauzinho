@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import { ethers } from "ethers";
 import './App.css';
 import abi from "./utils/WavePortal.json";
@@ -7,10 +7,12 @@ export default function App() {
 
   const [currentAccount, setCurrentAccount] = useState("");
 
-  const contractAddress = "0xe950722B927Fb66748111De1954e7847058A6b6C";
+  const [wavers, setWavers] = useState([]);
+
+  const contractAddress = "0x2e62D33952a403DB23B0f57aa55Ff3AfD997f849";
 
   const contractABI = abi.abi;
-  
+
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
@@ -72,6 +74,22 @@ export default function App() {
 
         let count = await wavePortalContract.getTotalWaves();
         console.log("Recuperado o número de tchauzinhos...", count.toNumber());
+
+        /*
+        * Executar o tchauzinho a partir do contrato inteligente
+        */
+        const waveTxn = await wavePortalContract.wave();
+        console.log("Minerando...", waveTxn.hash);
+
+        await waveTxn.wait();
+        console.log("Minerado -- ", waveTxn.hash);
+
+        count = await wavePortalContract.getTotalWaves();
+        console.log("Total de tchauzinhos recuperado...", count.toNumber());
+
+        const wavers = await wavePortalContract.getWavers();
+        setWavers(wavers);
+
       } else {
         console.log("Objeto Ethereum não encontrado!");
       }
@@ -103,6 +121,23 @@ export default function App() {
           <button className="waveButton" onClick={connectWallet}>
             Conectar carteira
           </button>
+        )}
+
+        {wavers && wavers.length > 0 && (
+          <div className="wavers">
+            <h2>👋 Acenadores:</h2> 
+            {
+              wavers.map((waiver, index) => {
+                return (
+                  <div key={index}>
+                    <div className="waiver">
+                      #{index} - {waiver}
+                    </div>
+                  </div>
+                )
+              })
+            }
+          </div>
         )}
       </div>
     </div>
