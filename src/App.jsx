@@ -12,7 +12,7 @@ export default function App() {
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
 
-  const contractAddress = "0x9f0515026bcc41D0e39AFA3C49494B28eb7aA66d";
+  const contractAddress = "0x5940Ab1B967B7791490Dbd2FD918117ac37c478F";
 
   const contractABI = abi.abi;
 
