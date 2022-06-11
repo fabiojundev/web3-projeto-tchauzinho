@@ -125,7 +125,7 @@ export default function App() {
 
         {wavers && wavers.length > 0 && (
           <div className="wavers">
-            <h2>👋 Acenadores:</h2> 
+            <h2>Quem mandou 👋 :</h2> 
             {
               wavers.map((waiver, index) => {
                 return (
