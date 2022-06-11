@@ -7,9 +7,12 @@ export default function App() {
 
   const [currentAccount, setCurrentAccount] = useState("");
 
-  const [wavers, setWavers] = useState([]);
+  const [allWaves, setAllWaves] = useState([]);
 
-  const contractAddress = "0x2e62D33952a403DB23B0f57aa55Ff3AfD997f849";
+  const [msg, setMsg] = useState("");
+  const [error, setError] = useState("");
+
+  const contractAddress = "0x9f0515026bcc41D0e39AFA3C49494B28eb7aA66d";
 
   const contractABI = abi.abi;
 
@@ -29,7 +32,9 @@ export default function App() {
       if (accounts.length !== 0) {
         const account = accounts[0];
         console.log("Encontrada a conta autorizada:", account);
-        setCurrentAccount(account)
+        setCurrentAccount(account);
+        getAllWaves();
+
       } else {
         console.log("Nenhuma conta autorizada foi encontrada")
       }
@@ -59,6 +64,44 @@ export default function App() {
     }
   }
 
+  const getAllWaves = async () => {
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        /*
+         * Chama o método getAllWaves do seu contrato inteligente
+         */
+        const waves = await wavePortalContract.getAllWaves();
+
+
+        /*
+         * Apenas precisamos do endereço, data/horário, e mensagem na nossa tela, então vamos selecioná-los
+         */
+        let wavesCleaned = [];
+        waves.forEach(wave => {
+          wavesCleaned.push({
+            address: wave.waver,
+            timestamp: new Date(wave.timestamp * 1000),
+            message: wave.message
+          });
+        });
+
+        /*
+         * Armazenando os dados
+         */
+        setAllWaves(wavesCleaned);
+      } else {
+        console.log("Objeto Ethereum não existe!")
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   useEffect(() => {
     checkIfWalletIsConnected();
   }, [])
@@ -75,20 +118,24 @@ export default function App() {
         let count = await wavePortalContract.getTotalWaves();
         console.log("Recuperado o número de tchauzinhos...", count.toNumber());
 
-        /*
-        * Executar o tchauzinho a partir do contrato inteligente
-        */
-        const waveTxn = await wavePortalContract.wave();
-        console.log("Minerando...", waveTxn.hash);
+        if(msg && msg.length > 0) {
+          setError("");
+          const waveTxn = await wavePortalContract.wave(msg);
+          console.log("Minerando...", waveTxn.hash);
+          setError("Aguarde, minerando...");
+          setMsg("");
 
-        await waveTxn.wait();
-        console.log("Minerado -- ", waveTxn.hash);
+          await waveTxn.wait();
+          console.log("Minerado -- ", waveTxn.hash);
 
-        count = await wavePortalContract.getTotalWaves();
-        console.log("Total de tchauzinhos recuperado...", count.toNumber());
-
-        const wavers = await wavePortalContract.getWavers();
-        setWavers(wavers);
+          count = await wavePortalContract.getTotalWaves();
+          console.log("Total de tchauzinhos recuperado...", count.toNumber());
+          setError("");
+          getAllWaves();
+        }
+        else {
+          setError("Por favor, digite uma mensagem!");
+        }
 
       } else {
         console.log("Objeto Ethereum não encontrado!");
@@ -108,12 +155,22 @@ export default function App() {
 
         <div className="bio">
           Eu sou o fabiojun e bora acenar!
-          Conecte sua carteira  Ethereum wallet e me manda um tchauzinho!
+          Conecte sua carteira Ethereum wallet e me manda um tchauzinho!
         </div>
 
+        <h3>Digite sua mensagem:</h3>
+        <input 
+          type="text"
+          placeholder="Digite sua mensagem"
+          value={msg}
+          onChange={(e) => setMsg(e.target.value)}
+        />
         <button className="waveButton" onClick={wave}>
           Mandar Tchauzinho 🌟
         </button>
+        <div className="error">
+          {error}
+        </div>
         {/*
         * Se não existir currentAccount, apresente este botão
         */}
@@ -123,22 +180,14 @@ export default function App() {
           </button>
         )}
 
-        {wavers && wavers.length > 0 && (
-          <div className="wavers">
-            <h2>Quem mandou 👋 :</h2> 
-            {
-              wavers.map((waiver, index) => {
-                return (
-                  <div key={index}>
-                    <div className="waiver">
-                      #{index} - {waiver}
-                    </div>
-                  </div>
-                )
-              })
-            }
-          </div>
-        )}
+        {allWaves.map((wave, index) => {
+          return (
+            <div key={index} style={{ backgroundColor: "OldLace", marginTop: "16px", padding: "8px" }}>
+              <div>Endereço: {wave.address}</div>
+              <div>Data/Horário: {wave.timestamp.toString()}</div>
+              <div>Mensagem: {wave.message}</div>
+            </div>)
+        })}
       </div>
     </div>
   );
