@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import './App.css';
+import abi from "./utils/WavePortal.json";
 
 export default function App() {
 
   const [currentAccount, setCurrentAccount] = useState("");
 
+  const contractAddress = "0xe950722B927Fb66748111De1954e7847058A6b6C";
+
+  const contractABI = abi.abi;
+  
   const checkIfWalletIsConnected = async () => {
     try {
       const { ethereum } = window;
@@ -56,8 +61,23 @@ export default function App() {
     checkIfWalletIsConnected();
   }, [])
 
-  const wave = () => {
+  const wave = async () => {
+    try {
+      const { ethereum } = window;
 
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        let count = await wavePortalContract.getTotalWaves();
+        console.log("Recuperado o número de tchauzinhos...", count.toNumber());
+      } else {
+        console.log("Objeto Ethereum não encontrado!");
+      }
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   return (
@@ -73,8 +93,8 @@ export default function App() {
           Conecte sua carteira  Ethereum wallet e me manda um tchauzinho!
         </div>
 
-        <button className="waveButton" onClick={null}>
-          Mandar Tchauzinho
+        <button className="waveButton" onClick={wave}>
+          Mandar Tchauzinho 🌟
         </button>
         {/*
         * Se não existir currentAccount, apresente este botão
