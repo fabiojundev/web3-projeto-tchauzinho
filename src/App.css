@@ -1,3 +1,8 @@
+body {
+  background: #222;
+  color: white;
+}
+
 .mainContainer {
   display: flex;
   justify-content: center;
@@ -35,8 +40,23 @@
   font-size: 1.2em;
 }
 
+.waves {
+  background-color: #eee;
+  color: #000;
+  padding: 8px;
+  margin-top: 16px;
+}
+
 .error {
   color: red;
   margin: 1em 0;
   height: 2em;
+}
+
+input {
+  height: 2em;  
+}
+
+.disabled {
+  opacity: 0.5;
 }

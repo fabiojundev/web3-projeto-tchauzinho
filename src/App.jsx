@@ -12,7 +12,7 @@ export default function App() {
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
 
-  const contractAddress = "0x5940Ab1B967B7791490Dbd2FD918117ac37c478F";
+  const contractAddress = "0x55370D49C8b46dba158F477EF22F400831eF5E2a";
 
   const contractABI = abi.abi;
 
@@ -76,7 +76,7 @@ export default function App() {
          * Chama o método getAllWaves do seu contrato inteligente
          */
         const waves = await wavePortalContract.getAllWaves();
-
+        console.log("Todas as ondas:", waves);
 
         /*
          * Apenas precisamos do endereço, data/horário, e mensagem na nossa tela, então vamos selecioná-los
@@ -118,20 +118,21 @@ export default function App() {
         let count = await wavePortalContract.getTotalWaves();
         console.log("Recuperado o número de tchauzinhos...", count.toNumber());
 
-        if(msg && msg.length > 0) {
-          setError("");
-          const waveTxn = await wavePortalContract.wave(msg);
-          console.log("Minerando...", waveTxn.hash);
-          setError("Aguarde, minerando...");
-          setMsg("");
-
-          await waveTxn.wait();
-          console.log("Minerado -- ", waveTxn.hash);
-
-          count = await wavePortalContract.getTotalWaves();
-          console.log("Total de tchauzinhos recuperado...", count.toNumber());
-          setError("");
-          getAllWaves();
+        if (msg && msg.length > 0) {
+            setError("");
+            const waveTxn = await wavePortalContract.wave(msg, { gasLimit: 300000 });
+            console.log("Minerando...", waveTxn.hash);
+            setError("Aguarde, minerando...");
+            setMsg("");
+  
+            await waveTxn.wait();
+            console.log("Minerado -- ", waveTxn.hash);
+  
+            count = await wavePortalContract.getTotalWaves();
+            console.log("Total de tchauzinhos recuperado...", count.toNumber());
+            setError("");
+            getAllWaves();
+              
         }
         else {
           setError("Por favor, digite uma mensagem!");
@@ -140,8 +141,10 @@ export default function App() {
       } else {
         console.log("Objeto Ethereum não encontrado!");
       }
-    } catch (error) {
-      console.log(error)
+    } 
+    catch (error) {
+      console.log(error);
+      setError("Erro ao enviar tchauzinho");
     }
   }
 
@@ -156,16 +159,23 @@ export default function App() {
         <div className="bio">
           Eu sou o fabiojun e bora acenar!
           Conecte sua carteira Ethereum wallet e me manda um tchauzinho!
+          Você tem 50% de chance de ganhar 0.00001 Ether para cada tchauzinho que enviar.
+          Porém, você só pode enviar um tchau a cada 15min.
         </div>
 
         <h3>Digite sua mensagem:</h3>
-        <input 
+        <input
           type="text"
           placeholder="Digite sua mensagem"
           value={msg}
           onChange={(e) => setMsg(e.target.value)}
+          disabled={!currentAccount}
         />
-        <button className="waveButton" onClick={wave}>
+        <button 
+          className={"waveButton" + (currentAccount ? "" : " disabled")}
+          onClick={wave}
+          disabled={!currentAccount}
+        >
           Mandar Tchauzinho 🌟
         </button>
         <div className="error">
@@ -182,7 +192,7 @@ export default function App() {
 
         {allWaves.map((wave, index) => {
           return (
-            <div key={index} style={{ backgroundColor: "OldLace", marginTop: "16px", padding: "8px" }}>
+            <div key={index} className={"waves"}>
               <div>Endereço: {wave.address}</div>
               <div>Data/Horário: {wave.timestamp.toString()}</div>
               <div>Mensagem: {wave.message}</div>
